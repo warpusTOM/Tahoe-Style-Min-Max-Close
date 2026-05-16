@@ -1,6 +1,8 @@
 bin/
 obj/
 publish/
+public-release/
+release-package/
 *.zip
 *.exe
 *.user

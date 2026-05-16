@@ -32,6 +32,12 @@ The app runs as administrator and includes a restore option.
 dotnet publish .\TahoeTitlebarOneClick.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
 ```
 
+Private test build with local assets embedded:
+
+```powershell
+dotnet publish .\TahoeTitlebarOneClick.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:EmbedPrivateAssets=true
+```
+
 ## Assets
 
 This public source tree does not ship private/test binary assets. Put redistributable assets in `Assets\` before publishing a private build:
