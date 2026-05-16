@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>JhonLloydMolino.TahoeTitlebar</AssemblyName>
+    <RootNamespace>TahoeTitlebarOneClick</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\TahoeTraffic.theme" Condition="Exists('Assets\TahoeTraffic.theme')" />
+    <EmbeddedResource Include="Assets\TahoeTraffic.msstyles" Condition="Exists('Assets\TahoeTraffic.msstyles')" />
+    <EmbeddedResource Include="Assets\ApplicationFrame.dll.patched" Condition="Exists('Assets\ApplicationFrame.dll.patched')" />
+  </ItemGroup>
+
+</Project>

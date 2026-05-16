@@ -1,0 +1,11 @@
+bin/
+obj/
+publish/
+*.zip
+*.exe
+*.user
+
+# Private/test assets. Do not commit these to a public repo unless you have redistribution rights.
+Assets/ApplicationFrame.dll.patched
+Assets/TahoeTraffic.theme
+Assets/TahoeTraffic.msstyles
