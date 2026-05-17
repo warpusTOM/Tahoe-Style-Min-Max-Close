@@ -5,7 +5,7 @@ This public build keeps the installer redistributable:
 - It does not bundle StartAllBack, StartAllBack license data, or private StartAllBack program files.
 - It does not bundle Microsoft system DLLs.
 - Private/test assets such as `ApplicationFrame.dll.patched`, `TahoeTraffic.theme`, and `TahoeTraffic.msstyles` are intentionally ignored by git unless redistribution rights are cleared.
-- It cannot fully replace close/minimize/maximize visuals unless the Tahoe theme assets are embedded in a private build or supplied by the user in `.\Assets`.
+- It cannot redistribute Microsoft DLLs or third-party private theme binaries, but it now generates `TahoeTraffic.theme` automatically and reuses an already-installed local `TahoeTraffic.msstyles` / compatible local mac-style theme when present.
 
 The app includes the one-click UX:
 
@@ -34,3 +34,9 @@ Private build with embedded local assets:
 ```powershell
 dotnet publish .\TahoeTitlebarOneClick.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:EmbedPrivateAssets=true
 ```
+
+### v0.3.1 asset fix
+
+- Generates the missing Tahoe .theme file automatically.
+- Uses embedded/sidecar assets first, then safely reuses local installed TahoeTraffic or Night Owl mac-style .msstyles assets when present.
+- Keeps ApplicationFrame.dll patching guarded; no Microsoft DLL is uploaded in public release assets.

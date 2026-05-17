@@ -216,8 +216,8 @@ public sealed class TahoeInstaller
                 : alreadyPatched
                     ? "Current ApplicationFrame.dll already matches a supported patched hash."
                     : "Unsupported build/hash. Settings/UWP patch will be skipped.",
-            TahoeThemeAsset = FindAsset("TahoeTraffic.theme"),
-            TahoeMsstylesAsset = FindAsset("TahoeTraffic.msstyles"),
+            TahoeThemeAsset = ResolveThemeAssetStatus(),
+            TahoeMsstylesAsset = ResolveMsstylesAssetStatus(),
             ApplicationFramePatchedAsset = FindAsset("ApplicationFrame.dll.patched"),
             StartAllBackInstalled = IsStartAllBackInstalled(),
             WindowsTerminalSettingsPath = GetWindowsTerminalSettingsPath(),
@@ -319,11 +319,14 @@ public sealed class TahoeInstaller
 
     private void InstallThemePackage(InstallReport report)
     {
-        if (!HasResourceOrSidecar("TahoeTraffic.theme") || !HasResourceOrSidecar("TahoeTraffic.msstyles"))
+        var themeAsset = ResolveThemeAssetStatus();
+        var msstylesAsset = ResolveMsstylesAssetStatus();
+
+        if (!themeAsset.Exists || !msstylesAsset.Exists)
         {
-            log("Skipped Tahoe theme package: TahoeTraffic.theme/msstyles assets are not embedded or beside the EXE.");
-            log(@"Put redistributable assets in .\Assets\ beside the EXE, or build a private package with embedded assets.");
-            report.MissingRequirements.Add("Core theme assets missing: TahoeTraffic.theme and/or TahoeTraffic.msstyles.");
+            log("Skipped Tahoe theme package: no usable TahoeTraffic.msstyles source was found.");
+            log(@"Put allowed assets in .\Assets\, install a local Tahoe/Night Owl/mac theme first, or build a private package with embedded assets.");
+            report.MissingRequirements.Add("Core msstyles asset missing: no embedded, sidecar, or local installed Tahoe/mac style was found.");
             return;
         }
 
@@ -335,8 +338,9 @@ public sealed class TahoeInstaller
         Directory.CreateDirectory(tahoeDir);
         BackupFile(themePath);
         BackupFile(msstylesPath);
-        WriteResourceToFile("TahoeTraffic.theme", themePath);
-        WriteResourceToFile("TahoeTraffic.msstyles", msstylesPath);
+
+        WriteThemeAssetToFile(themeAsset, themePath);
+        WriteMsstylesAssetToFile(msstylesAsset, msstylesPath);
         report.ThemeInstalled = File.Exists(themePath);
         report.MsstylesInstalled = File.Exists(msstylesPath);
 
@@ -352,6 +356,8 @@ public sealed class TahoeInstaller
 
         TryShellOpen(themePath);
         log("Theme package installed: " + themePath);
+        log("Theme source: " + themeAsset.Describe());
+        log("msstyles source: " + msstylesAsset.Describe());
     }
 
     private void InstallRegistrySettings()
@@ -828,6 +834,116 @@ public sealed class TahoeInstaller
         return sidecar == null
             ? new AssetStatus(shortName, false, "missing", "")
             : new AssetStatus(shortName, true, "sidecar", sidecar);
+    }
+
+    private static AssetStatus ResolveThemeAssetStatus()
+    {
+        var bundled = FindAsset("TahoeTraffic.theme");
+        if (bundled.Exists)
+        {
+            return bundled;
+        }
+
+        var installedTheme = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Resources", "Themes", "TahoeTraffic.theme");
+        if (File.Exists(installedTheme))
+        {
+            return new AssetStatus("TahoeTraffic.theme", true, "installed-local", installedTheme);
+        }
+
+        return new AssetStatus("TahoeTraffic.theme", true, "generated", "built-in TahoeTraffic.theme template");
+    }
+
+    private static AssetStatus ResolveMsstylesAssetStatus()
+    {
+        var bundled = FindAsset("TahoeTraffic.msstyles");
+        if (bundled.Exists)
+        {
+            return bundled;
+        }
+
+        var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+        var candidates = new[]
+        {
+            Path.Combine(windows, "Resources", "Themes", "TahoeTraffic", "TahoeTraffic.msstyles"),
+            Path.Combine(windows, "Resources", "Themes", "Night Owl", "Dark Owl - mac.msstyles"),
+            Path.Combine(windows, "Resources", "Themes", "Night Owl", "Light Owl - mac.msstyles")
+        };
+
+        var local = candidates.FirstOrDefault(File.Exists);
+        return local == null
+            ? AssetStatus.Missing("TahoeTraffic.msstyles")
+            : new AssetStatus("TahoeTraffic.msstyles", true, "installed-local", local);
+    }
+
+    private void WriteThemeAssetToFile(AssetStatus asset, string path)
+    {
+        if (asset.Source.Equals("generated", StringComparison.OrdinalIgnoreCase))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, BuildTahoeThemeFile(), System.Text.Encoding.Unicode);
+            return;
+        }
+
+        WriteAssetToFile(asset, "TahoeTraffic.theme", path);
+    }
+
+    private void WriteMsstylesAssetToFile(AssetStatus asset, string path)
+    {
+        WriteAssetToFile(asset, "TahoeTraffic.msstyles", path);
+    }
+
+    private void WriteAssetToFile(AssetStatus asset, string shortName, string path)
+    {
+        if (asset.Source.Equals("embedded", StringComparison.OrdinalIgnoreCase) ||
+            asset.Source.Equals("sidecar", StringComparison.OrdinalIgnoreCase))
+        {
+            WriteResourceToFile(shortName, path);
+            return;
+        }
+
+        if (asset.Source.Equals("installed-local", StringComparison.OrdinalIgnoreCase))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            if (!Path.GetFullPath(asset.Path).Equals(Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase))
+            {
+                File.Copy(asset.Path, path, overwrite: true);
+            }
+            return;
+        }
+
+        throw new FileNotFoundException("Asset missing: " + shortName);
+    }
+
+    private static string BuildTahoeThemeFile()
+    {
+        return """
+; Generated by Jhon-Lloyd Molino Tahoe Titlebar.
+
+[Theme]
+DisplayName=TahoeTraffic
+
+[Control Panel\Desktop]
+Wallpaper=
+Pattern=
+MultimonBackgrounds=0
+PicturePosition=4
+
+[VisualStyles]
+Path=%ResourceDir%\Themes\TahoeTraffic\TahoeTraffic.msstyles
+ColorStyle=NormalColor
+Size=NormalSize
+AutoColorization=1
+SystemMode=Dark
+AppMode=Dark
+ColorizationColor=0XC43A3A3A
+VisualStyleVersion=10
+
+[MasterThemeSelector]
+MTSM=RJSPBS
+
+[Sounds]
+SchemeName=Windows Default
+""";
     }
 
     private static string GetWindowsBuildInfo()

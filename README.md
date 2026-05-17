@@ -41,7 +41,7 @@ C:\ProgramData\JhonLloydMolino\TahoeTitlebar\Backups
 
 ## What It Changes
 
-- Tahoe theme and `.msstyles` package when those assets are present as embedded private assets or sidecar files in `.\Assets`.
+- Tahoe theme and `.msstyles` package when assets are embedded, supplied in `.\Assets`, or already installed locally as `TahoeTraffic` / compatible local mac-style theme assets. If only the `.theme` file is missing, the app generates it automatically.
 - Browser native titlebar settings for Brave, Chrome, and Edge.
 - Windows Terminal titlebar settings.
 - DWM, dark mode, and titlebar-related registry settings.
@@ -54,7 +54,7 @@ C:\ProgramData\JhonLloydMolino\TahoeTitlebar\Backups
 Before installing, the app checks:
 
 - Windows version/build and current `ApplicationFrame.dll` SHA256.
-- Whether `TahoeTraffic.theme`, `TahoeTraffic.msstyles`, and `ApplicationFrame.dll.patched` are available as embedded or sidecar assets.
+- Whether `TahoeTraffic.theme`, `TahoeTraffic.msstyles`, and `ApplicationFrame.dll.patched` are available as embedded assets, sidecar assets, or safe local installed assets.
 - StartAllBack installation.
 - Windows Terminal settings path.
 - Brave, Chrome, and Edge executables, profiles, and shortcuts.
@@ -108,7 +108,7 @@ This source tree does not publish private/test binary assets. For your own priva
 
 Do not publicly redistribute Microsoft system DLLs as standalone assets.
 
-For public builds, users may still provide their own allowed sidecar files in `.\Assets` beside the EXE:
+For public builds, the app can generate `TahoeTraffic.theme` and can reuse an already-installed local `TahoeTraffic.msstyles` or compatible local mac-style theme. Users may also provide their own allowed sidecar files in `.\Assets` beside the EXE:
 
 ```text
 Assets\TahoeTraffic.theme

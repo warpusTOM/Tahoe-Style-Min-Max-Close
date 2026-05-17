@@ -19,3 +19,5 @@ Assets\ApplicationFrame.dll.patched
 ```
 
 The app diagnoses these files before install. Missing theme or `.msstyles` assets produce a `Partial` install report instead of a fake success. `ApplicationFrame.dll.patched` is used only when the local Windows `ApplicationFrame.dll` hash is listed in the supported-build table and the patch asset hash matches the expected patched hash.
+
+If TahoeTraffic.theme is missing, the app can generate it automatically. If TahoeTraffic.msstyles is missing from embedded/sidecar assets, the app checks for already-installed local TahoeTraffic and Night Owl mac-style .msstyles files and uses those local machine assets without redistributing them in the public repo or release ZIP.
