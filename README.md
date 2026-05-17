@@ -61,8 +61,8 @@ Before installing, the app checks:
 
 After installing, the app opens a final report with:
 
-- `Full` when the core Tahoe theme and `.msstyles` install succeeded.
-- `Partial` when only safe browser, registry, terminal, or StartAllBack changes were applied.
+- `Full` only when the core Tahoe theme/`.msstyles` install succeeded and the Settings/UWP `ApplicationFrame.dll` titlebar patch is already applied or was applied safely.
+- `Partial` when safe parts were applied but any titlebar surface was skipped, including unsupported Settings/UWP `ApplicationFrame.dll` hashes, missing patch assets, or missing core theme assets.
 - `Failed` when no supported changes were applied.
 
 Unsupported `ApplicationFrame.dll` builds are never patched blindly. They are reported as `Settings/UWP patch skipped`, while safe parts still run.

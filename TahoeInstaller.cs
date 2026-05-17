@@ -264,17 +264,59 @@ public sealed class TahoeInstaller
 
     private static string DetermineFinalStatus(InstallReport report)
     {
-        if (report.ThemeInstalled && report.MsstylesInstalled)
+        if (!report.AnySafeChangeApplied)
         {
+            report.StatusReason = "No supported Tahoe changes were applied.";
+            return "Failed";
+        }
+
+        var blockers = GetCompletionBlockers(report).ToArray();
+        if (blockers.Length == 0)
+        {
+            report.StatusReason = "Core theme/msstyles and Settings/UWP titlebar patch are applied.";
             return "Full";
         }
 
-        if (report.AnySafeChangeApplied)
+        report.StatusReason = string.Join(" ", blockers);
+        return "Partial";
+    }
+
+    private static IEnumerable<string> GetCompletionBlockers(InstallReport report)
+    {
+        if (!report.ThemeInstalled || !report.MsstylesInstalled)
         {
-            return "Partial";
+            yield return "Core TahoeTraffic theme/msstyles did not fully install.";
         }
 
-        return "Failed";
+        if (!report.SettingsPatchApplied)
+        {
+            var reason = string.IsNullOrWhiteSpace(report.SettingsPatchSkippedReason)
+                ? "Settings/UWP ApplicationFrame patch did not apply."
+                : "Settings/UWP patch skipped: " + report.SettingsPatchSkippedReason;
+            yield return reason;
+        }
+
+        if (report.Diagnostics.WindowsTerminalSettingsExists && !report.WindowsTerminalConfigured)
+        {
+            yield return "Windows Terminal settings were detected but were not configured.";
+        }
+
+        if (report.Diagnostics.StartAllBackInstalled && !report.StartAllBackConfigured)
+        {
+            yield return "StartAllBack was detected but was not configured.";
+        }
+
+        var browserTargetsDetected = report.Diagnostics.BrowserProfiles.Any(browser =>
+            browser.ExeExists || browser.ProfileCount > 0 || browser.ShortcutCount > 0);
+        if (browserTargetsDetected && !report.BrowserTitlebarsConfigured)
+        {
+            yield return "Browser titlebar targets were detected but were not configured.";
+        }
+
+        if (report.Errors.Count > 0)
+        {
+            yield return "One or more install steps failed.";
+        }
     }
 
     private static string FinalStatusMessage(InstallReport report)
@@ -282,7 +324,7 @@ public sealed class TahoeInstaller
         return report.FinalStatus switch
         {
             "Full" => "Full Tahoe titlebar installed.",
-            "Partial" => "Partial install completed. Core theme assets were skipped or unavailable.",
+            "Partial" => "Partial install completed. Some titlebar surfaces or optional integrations were skipped.",
             _ => "Install failed. No supported Tahoe changes were applied."
         };
     }
@@ -1192,6 +1234,7 @@ SchemeName=Windows Default
     {
         public DiagnosticsReport Diagnostics { get; } = diagnostics;
         public string FinalStatus { get; set; } = "Failed";
+        public string StatusReason { get; set; } = "";
         public bool ThemeInstalled { get; set; }
         public bool MsstylesInstalled { get; set; }
         public bool BrowserTitlebarsConfigured { get; set; }
@@ -1217,14 +1260,21 @@ SchemeName=Windows Default
             SettingsPatchApplied ||
             RegistryConfigured;
 
+        public bool FullMinMaxCloseReplacement =>
+            ThemeInstalled &&
+            MsstylesInstalled &&
+            SettingsPatchApplied;
+
         public string ToText()
         {
             var lines = new List<string>
             {
                 "Tahoe Titlebar Final Report",
                 "Status: " + FinalStatus,
+                "Status reason: " + (string.IsNullOrWhiteSpace(StatusReason) ? "n/a" : StatusReason),
                 "Windows: " + Diagnostics.WindowsVersion,
                 "ApplicationFrame.dll SHA256: " + Diagnostics.ApplicationFrameSha256,
+                "Full min/max/close replacement: " + TahoeInstaller.YesNo(FullMinMaxCloseReplacement),
                 "Theme installed: " + TahoeInstaller.YesNo(ThemeInstalled),
                 "msstyles installed: " + TahoeInstaller.YesNo(MsstylesInstalled),
                 "Browser titlebars configured: " + TahoeInstaller.YesNo(BrowserTitlebarsConfigured),

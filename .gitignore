@@ -3,6 +3,7 @@ obj/
 publish/
 public-release/
 release-package/
+dist/
 *.zip
 *.exe
 *.user

@@ -12,7 +12,7 @@ The app includes the one-click UX:
 - `Fix Everything Automatically`
 - `Old Windows close/minimize/maximize + taskbar`
 
-`Fix Everything Automatically` runs diagnosis first, applies every safe supported change, verifies the result, and opens a final report with `Full`, `Partial`, or `Failed` status.
+`Fix Everything Automatically` runs diagnosis first, applies every safe supported change, verifies the result, and opens a final report with `Full`, `Partial`, or `Failed` status. `Full` is reserved for machines where the core theme/msstyles and Settings/UWP titlebar patch are actually applied; unsupported `ApplicationFrame.dll` hashes now report `Partial` with a clear status reason.
 
 Public builds still apply safe parts automatically:
 
@@ -22,6 +22,12 @@ Public builds still apply safe parts automatically:
 - DWM/dark/titlebar registry settings.
 
 The Settings/UWP `ApplicationFrame.dll` patch is guarded by a supported-build/hash table. Unsupported builds are reported and skipped. The app never overwrites `ApplicationFrame.dll` unless the current file hash is explicitly supported, a matching patch asset exists, and a backup has been written.
+
+### v0.3.2 report honesty fix
+
+- Does not report `Full` when the Settings/UWP `ApplicationFrame.dll` patch was skipped.
+- Adds a `Status reason` and `Full min/max/close replacement` line to the final report.
+- Keeps unsupported hashes safe: future builds can be added only with a verified original hash, verified patched hash, and matching private patch asset.
 
 Backups are written to:
 
